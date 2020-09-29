@@ -1,0 +1,24 @@
+{
+  "name": "Tetration Pro Tools",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "description": "Chrome extension to enable enhanced policy exporting functionality for Cisco Tetration.",
+  "homepage_url": "https://www.cisco.com/go/tetration",
+  "background": {
+    "scripts": [
+      "background.js"
+    ],
+    "persistent": true
+  },
+  "browser_action": {
+    "default_title": "Tetration Pro Tools"
+  },
+  "permissions": [
+    "activeTab", "contextMenus"
+  ],
+  "icons": {
+    "16": "images/Tetration_Logo_Pro_16x16.png",
+    "48": "images/Tetration_Logo_Pro_1_48x48.png",
+    "128": "images/Tetration_Logo_Pro_2_128x128.png"
+  }
+}
