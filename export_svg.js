@@ -165,19 +165,34 @@ function processPoliciesToGraphviz(policiesToProcess, applicationDetails) {
         name="${applicationDetails['name']}";
         rankdir=LR;`;
 
+    let edgeLength = policiesToProcess['cluster_edges'].length;
+    let usedFilters = new Set()
+    let edges = []
+    for (i = 0; i < edgeLength; i++) {
+        let currentEdge = policiesToProcess['cluster_edges'][i];
+        if (currentEdge['rank'] != 'CATCH_ALL') {
+            let color = (currentEdge['action'] == 'ALLOW') ? "forestgreen" : "firebrick";
+            edges.push(`"${currentEdge['src_id']}" -> "${currentEdge['dst_id']}" [label="${portsToString(currentEdge['l4_details'])}", color="${color}"]`);
+            usedFilters.add(currentEdge['src_id']);
+            usedFilters.add(currentEdge['dst_id']);
+        }
+    }
+
     let internalFilters = [];
     let externalFilters = [];
     for (const [key, value] of Object.entries(policiesToProcess['filters'])) {
-        if (value['filter_type'] == 'Cluster') {
-            internalFilters.push(`"${value['id']}" [fillcolor=darkslateblue, fontcolor=white, label="${value['name']}", shape=rectangle, style=filled];`);
-        } else if (value['name'] == applicationDetails['app_scope']['name']) {
-            internalFilters.push(`"${value['id']}" [fillcolor=deepskyblue3, fontcolor=white, label="${value['name']}", shape=rectangle, style=filled];`);
-        } else if (value['filter_type'] == 'UserInventoryFilter' && value['parent_app_scope_id'] == applicationDetails['app_scope']['id']) {
-            internalFilters.push(`"${value['id']}" [fillcolor=darkorange1, fontcolor=white, label="${value['name']}", shape=rectangle, style=filled];`);
-        } else if (value['filter_type'] == 'AppScope') {
-            externalFilters.push(`"${value['id']}" [fillcolor=deepskyblue3, fontcolor=white, label="${value['name']}", shape=rectangle, style=filled];`);
-        } else {
-            externalFilters.push(`"${value['id']}" [fillcolor=darkorange1, fontcolor=white, label="${value['name']}", shape=rectangle, style=filled];`);
+        if (usedFilters.has(value['id'])) {
+            if (value['filter_type'] == 'Cluster') {
+                internalFilters.push(`"${value['id']}" [fillcolor=darkslateblue, fontcolor=white, label="${value['name']}", shape=rectangle, style=filled];`);
+            } else if (value['name'] == applicationDetails['app_scope']['name']) {
+                internalFilters.push(`"${value['id']}" [fillcolor=deepskyblue3, fontcolor=white, label="${value['name']}", shape=rectangle, style=filled];`);
+            } else if (value['filter_type'] == 'UserInventoryFilter' && value['app_scope_id'] == applicationDetails['app_scope']['id']) {
+                internalFilters.push(`"${value['id']}" [fillcolor=darkorange1, fontcolor=white, label="${value['name']}", shape=rectangle, style=filled];`);
+            } else if (value['filter_type'] == 'AppScope') {
+                externalFilters.push(`"${value['id']}" [fillcolor=deepskyblue3, fontcolor=white, label="${value['name']}", shape=rectangle, style=filled];`);
+            } else {
+                externalFilters.push(`"${value['id']}" [fillcolor=darkorange1, fontcolor=white, label="${value['name']}", shape=rectangle, style=filled];`);
+            }
         }
     }
 
@@ -197,19 +212,10 @@ function processPoliciesToGraphviz(policiesToProcess, applicationDetails) {
         dot = dot + "\n}";
     }
 
-    let edgeLength = policiesToProcess['cluster_edges'].length;
-    let edges = []
-    for (i = 0; i < edgeLength; i++) {
-        let currentEdge = policiesToProcess['cluster_edges'][i];
-        if (currentEdge['rank'] != 'CATCH_ALL') {
-            let color = (currentEdge['action'] == 'ALLOW') ? "forestgreen" : "firebrick";
-            edges.push(`"${currentEdge['src_id']}" -> "${currentEdge['dst_id']}" [label="${portsToString(currentEdge['l4_details'])}", color="${color}"]`);
-        }
-    }
-
     if (edgeLength > 0) {
         dot = dot + edges.join('\n');
     }
+
     dot = dot + '\n}';
     return dot;
 }
